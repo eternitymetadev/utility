@@ -9,6 +9,7 @@ use App\Exports\FileInfoExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Smalot\PdfParser\Parser;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class OAuthController extends Controller
 {
