@@ -30,16 +30,18 @@ class OAuthController extends Controller
 
     public function triggerRedirect()
     {
+        \Log::info('Attempting to trigger redirect');
+    
         $redirectUrl = 'https://utility.etsbeta.com/auth/redirect';
-
-        // Perform the HTTP request to trigger the redirect URL
         $response = Http::get($redirectUrl);
-
+    
         if ($response->successful()) {
+            \Log::info('Successfully triggered redirect');
             return response()->json(['message' => 'Successfully triggered redirect']);
+        } else {
+            \Log::error('Failed to trigger redirect', ['status' => $response->status(), 'body' => $response->body()]);
+            return response()->json(['error' => 'Failed to trigger redirect'], 500);
         }
-
-        return response()->json(['error' => 'Failed to trigger redirect'], 500);
     }
 
 
