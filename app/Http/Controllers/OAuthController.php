@@ -37,7 +37,7 @@ class OAuthController extends Controller
                 $callbackResponse = Http::get($handleCallback);
     
                 if ($callbackResponse->successful()) {
-                    \Log::info('Callback triggered successfully', ['status' => $callbackResponse->status()]);
+                    \Log::info('Callback triggered successfully', ['status' => $callbackResponse->status(),'body' => $callbackResponse->body()]);
                     return response()->json(['message' => 'Successfully triggered callback']);
                 } else {
                     \Log::error('Failed to trigger callback', ['status' => $callbackResponse->status()]);
