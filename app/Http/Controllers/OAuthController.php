@@ -47,6 +47,7 @@ class OAuthController extends Controller
 
     public function redirectToProvider()
     {
+        \Log::info('gya');
         $baseUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize';
         $params = [
             'client_id' => env('MICROSOFT_CLIENT_ID'),
