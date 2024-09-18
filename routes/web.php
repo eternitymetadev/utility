@@ -14,7 +14,6 @@ Route::get('auth/redirect', [OAuthController::class, 'redirectToProvider'])->nam
 Route::get('auth/callback', [OAuthController::class, 'handleProviderCallback'])->name('auth.callback');
 
 // routes/web.php
-Route::get('/trigger-redirect', [OAuthController::class, 'triggerRedirect']);
 
 Route::post('/notifications', [NotificationController::class, 'handleNotification']);
 
