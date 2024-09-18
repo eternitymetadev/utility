@@ -33,26 +33,39 @@ class OAuthController extends Controller
         \Log::info('Attempting to trigger redirect');
     
         $redirectUrl = 'https://utility.etsbeta.com/auth/redirect';
-        $response = Http::get($redirectUrl);
     
-        if ($response->successful()) {
-            $handleCallback = 'https://utility.etsbeta.com/auth/callback';
-            $response = Http::get($handleCallback);
+        try {
+            $response = Http::get($redirectUrl);
+    
             if ($response->successful()) {
-            return response()->json(['message' => 'Successfully triggered callback']);
-           }
-           else {
-            return response()->json(['error' => 'Failed to trigger callback'], 500);
-        }
-        } else {
-            return response()->json(['error' => 'Failed to trigger redirect'], 500);
+                \Log::info('Redirect triggered successfully', ['status' => $response->status(), 'body' => $response->body()]);
+    
+                $handleCallback = 'https://utility.etsbeta.com/auth/callback';
+                \Log::info('Attempting to trigger callback');
+    
+                $callbackResponse = Http::get($handleCallback);
+    
+                if ($callbackResponse->successful()) {
+                    \Log::info('Callback triggered successfully', ['status' => $callbackResponse->status(), 'body' => $callbackResponse->body()]);
+                    return response()->json(['message' => 'Successfully triggered callback']);
+                } else {
+                    \Log::error('Failed to trigger callback', ['status' => $callbackResponse->status(), 'body' => $callbackResponse->body()]);
+                    return response()->json(['error' => 'Failed to trigger callback'], 500);
+                }
+            } else {
+                \Log::error('Failed to trigger redirect', ['status' => $response->status(), 'body' => $response->body()]);
+                return response()->json(['error' => 'Failed to trigger redirect'], 500);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Exception occurred while triggering redirect or callback', ['message' => $e->getMessage()]);
+            return response()->json(['error' => 'Exception occurred while triggering redirect or callback'], 500);
         }
     }
+    
 
 
     public function redirectToProvider()
     {
-        \Log::info('gya');
         $baseUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize';
         $params = [
             'client_id' => env('MICROSOFT_CLIENT_ID'),
