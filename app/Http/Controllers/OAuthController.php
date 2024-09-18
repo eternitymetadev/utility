@@ -36,10 +36,15 @@ class OAuthController extends Controller
         $response = Http::get($redirectUrl);
     
         if ($response->successful()) {
-            \Log::info('Successfully triggered redirect');
-            return response()->json(['message' => 'Successfully triggered redirect']);
+            $handleCallback = 'https://utility.etsbeta.com/auth/callback';
+            $response = Http::get($handleCallback);
+            if ($response->successful()) {
+            return response()->json(['message' => 'Successfully triggered callback']);
+           }
+           else {
+            return response()->json(['error' => 'Failed to trigger callback'], 500);
+        }
         } else {
-            \Log::error('Failed to trigger redirect', ['status' => $response->status(), 'body' => $response->body()]);
             return response()->json(['error' => 'Failed to trigger redirect'], 500);
         }
     }
