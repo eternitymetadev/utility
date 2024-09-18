@@ -9,7 +9,6 @@ use App\Exports\FileInfoExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Smalot\PdfParser\Parser;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 
 class OAuthController extends Controller
 {
@@ -27,26 +26,6 @@ class OAuthController extends Controller
             'scope'                  => ['openid','User.Read','profile','Files.ReadWrite']
         ]);
     }
-
-    public function triggerRedirect()
-    {
-
-                $handleCallback = 'https://utility.etsbeta.com/auth/callback';
-                \Log::info('Attempting to trigger callback');
-    
-                $callbackResponse = Http::get($handleCallback);
-    
-                if ($callbackResponse->successful()) {
-                    \Log::info('Callback triggered successfully', ['status' => $callbackResponse->status(),'body' => $callbackResponse->body()]);
-                    return response()->json(['message' => 'Successfully triggered callback']);
-                } else {
-                    \Log::error('Failed to trigger callback', ['status' => $callbackResponse->status()]);
-                    return response()->json(['error' => 'Failed to trigger callback'], 500);
-                }
-           
-   
-    }
-    
 
 
     public function redirectToProvider()
@@ -287,13 +266,10 @@ class OAuthController extends Controller
     
         // Now, handle the code
         $code = $request->input('code');
-    
         if (empty($code)) {
-
-            $code = '0.AXIAwqikzOTqmkmN-DBMyCXGvdV9dvU7lZ9OjvhW2pPlkSHDALw.AgABBAIAAAApTwJmzXqdR4BN2miheQMYAwDs_wUA9P8Yo7VOjeYcFizZMSDVUc59xVKzy2ktzyiSlBWJReZEMePJrS3YFoTvTP-lL40-s__JGwl8cRnRckMLGot1AYPGL9zZwgVJkbsCL86DWSCI-Dy1Bk8PT8O7dV2NUCnzKqjAS-2kwARWsQoUsizXZHeTMEwYkw5NF6wR05hc9xiUb5Sm_-MPotEpvB7uGPDDeYtZHiOvM7wsxW3CH7VyhtAFAnHk9Q7ICa7atAXYIvh6SlGEG2lHunimABk3Z9bjaDizMOl4Yebb-oSyB2xuOBbIrSm3pHQF58cbjBcr_8tVLn2bpnAJCJulKPtXGDKMTEQSlFxqE_6Mgke4ekFNjZK3eNYCa2PNNKdsfQlIpSBIQ-p5gkZZ90YQIuuUUbBnb6VcV3yHOqalbMPP4v2hryt8TRn6KwUUqwKKpZiXvCxbSuz089FY_vF6_wllHF7vd7zAWlEoQfSW37oOCA5Pa0BM2NelzKBSHovy92r7t-qvrdd5k959hHjIyLM_XZjrpZeL_0VMogAge3sUueHmNyUnWF5bA_Y3SFz2kM7cK9hMdshPGGalYu49mSE7LzWlk2wihgGjX4vIwPKf524bcKooGFu8cie1sw0aDqHM7V3KtAtlqocEfX_pmZvTx3t7mSC37eD9Hy976LA9l6vKKXBQ0wew1usFqQ06ckEFOvpuCojSL3QwX-U14wU5mapw4mDkG6h50vit4uZVZv1HV2sW';
-            //return view('auth.callback', ['message' => 'Authorization code not found', 'status' => 'error']);
+            return view('auth.callback', ['message' => 'Authorization code not found', 'status' => 'error']);
         }
-        \Log::info('Request code: ' . $code);
+    
         try {
             // Request access token
             $accessToken = $this->provider->getAccessToken('authorization_code', [
@@ -301,7 +277,7 @@ class OAuthController extends Controller
                 'redirect_uri' => env('MICROSOFT_REDIRECT_URL'),
                 'scope' => ['User.Read', 'openid', 'profile', 'Files.ReadWrite']
             ]);
-            \Log::info('token: ' . $accessToken);
+    
             // Store the access token in the session
             session(['access_token' => $accessToken->getToken()]);
     
@@ -431,7 +407,7 @@ class OAuthController extends Controller
                             ]);
             
                         } catch (\Exception $e) {
-                            \Log::info('No existing Excel file found: ' . $e->getMessage());
+
                             return response()->json([
                                 'status' => 'error',
                                 'message' => 'PDF parsing failed:',
@@ -467,7 +443,7 @@ class OAuthController extends Controller
                         'data' => $e->getMessage(),
                     ]);
                 }
-                \Log::info('yoo,PDF files found and processed');
+
 
                 return response()->json([
                     'status' => 'success',

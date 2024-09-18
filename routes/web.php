@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OAuthController;
-use Illuminate\Support\Facades\Http;
 
 Route::get('/', function () {
     return view('welcome');
@@ -15,7 +14,6 @@ Route::get('auth/redirect', [OAuthController::class, 'redirectToProvider'])->nam
 Route::get('auth/callback', [OAuthController::class, 'handleProviderCallback'])->name('auth.callback');
 
 // routes/web.php
-Route::get('/trigger-redirect', [OAuthController::class, 'triggerRedirect']);
 
 Route::post('/notifications', [NotificationController::class, 'handleNotification']);
 
