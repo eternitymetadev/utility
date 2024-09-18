@@ -302,6 +302,8 @@ class OAuthController extends Controller
     
         // Now, handle the code
         $code = $request->input('code');
+        \Log::info('Request state: ' . $code);
+    
         if (empty($code)) {
             return view('auth.callback', ['message' => 'Authorization code not found', 'status' => 'error']);
         }
