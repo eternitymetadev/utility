@@ -78,7 +78,7 @@ class OAuthController extends Controller
         $authorizationUrl = $baseUrl . '?' . http_build_query($params);
     
         session(['oauth2state' => $params['state']]);
-       \Log::info('Stored state 1: ' . session('oauth2state')); 
+       // \Log::info('Stored state 1: ' . session('oauth2state')); 
 
         return redirect($authorizationUrl);
     }
@@ -295,7 +295,7 @@ class OAuthController extends Controller
 
     public function handleProviderCallback(Request $request)
     {
-        \Log::info('Request state: ' . $request->input('state')); // Log incoming state for debugging
+       // \Log::info('Request state: ' . $request->input('state')); // Log incoming state for debugging
     
         $state = $request->input('state'); 
         $storedState = session('oauth2state'); 
