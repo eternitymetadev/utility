@@ -30,36 +30,21 @@ class OAuthController extends Controller
 
     public function triggerRedirect()
     {
-        \Log::info('Attempting to trigger redirect');
-    
-        $redirectUrl = 'https://utility.etsbeta.com/auth/redirect';
-    
-        try {
-            $response = Http::get($redirectUrl);
-    
-            if ($response->successful()) {
-                \Log::info('Redirect triggered successfully', ['status' => $response->status(), 'body' => $response->body()]);
-    
+
                 $handleCallback = 'https://utility.etsbeta.com/auth/callback';
                 \Log::info('Attempting to trigger callback');
     
                 $callbackResponse = Http::get($handleCallback);
     
                 if ($callbackResponse->successful()) {
-                    \Log::info('Callback triggered successfully', ['status' => $callbackResponse->status(), 'body' => $callbackResponse->body()]);
+                    \Log::info('Callback triggered successfully', ['status' => $callbackResponse->status()]);
                     return response()->json(['message' => 'Successfully triggered callback']);
                 } else {
-                    \Log::error('Failed to trigger callback', ['status' => $callbackResponse->status(), 'body' => $callbackResponse->body()]);
+                    \Log::error('Failed to trigger callback', ['status' => $callbackResponse->status()]);
                     return response()->json(['error' => 'Failed to trigger callback'], 500);
                 }
-            } else {
-                \Log::error('Failed to trigger redirect', ['status' => $response->status(), 'body' => $response->body()]);
-                return response()->json(['error' => 'Failed to trigger redirect'], 500);
-            }
-        } catch (\Exception $e) {
-            \Log::error('Exception occurred while triggering redirect or callback', ['message' => $e->getMessage()]);
-            return response()->json(['error' => 'Exception occurred while triggering redirect or callback'], 500);
-        }
+           
+   
     }
     
 
