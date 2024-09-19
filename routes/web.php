@@ -12,6 +12,7 @@ Route::get('/create-subscription', [OAuthController::class, 'createSubscription'
 
 Route::get('auth/redirect', [OAuthController::class, 'redirectToProvider'])->name('auth.redirect');
 Route::get('auth/callback', [OAuthController::class, 'handleProviderCallback'])->name('auth.callback');
+Route::get('readpdf', [OAuthController::class, 'readPdf']);
 
 // routes/web.php
 

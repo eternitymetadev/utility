@@ -257,46 +257,268 @@ class OAuthController extends Controller
     //     }
     // }
 
-    public function handleProviderCallback(Request $request)
+    // public function handleProviderCallback(Request $request)
+    // {
+    //    // \Log::info('Request state: ' . $request->input('state')); // Log incoming state for debugging
+    
+    //     $state = $request->input('state'); 
+    //     $storedState = session('oauth2state'); 
+    
+    //     // Now, handle the code
+    //     $code = $request->input('code');
+    //     if (empty($code)) {
+    //         return view('auth.callback', ['message' => 'Authorization code not found', 'status' => 'error']);
+    //     }
+    
+    //     try {
+    //         // Request access token
+    //         $accessToken = $this->provider->getAccessToken('authorization_code', [
+    //             'code' => $code,
+    //             'redirect_uri' => env('MICROSOFT_REDIRECT_URL'),
+    //             'scope' => ['User.Read', 'openid', 'profile', 'Files.ReadWrite']
+    //         ]);
+    
+    //         // Store the access token in the session
+    //         session(['access_token' => $accessToken->getToken()]);
+    
+    //         // Use the access token to make API requests
+    //         $client = new Client();
+    //         $parser = new Parser();
+    //         $accessToken = session('access_token'); // Retrieve token from the session
+    
+    //         // Check if the OneDrive exists
+    //         $driveResponse = $client->request('GET', 'https://graph.microsoft.com/v1.0/me/drive', [
+    //             'headers' => [
+    //                 'Authorization' => 'Bearer ' . $accessToken,
+    //                 'Accept' => 'application/json',
+    //             ]
+    //         ]);
+    
+    //         if ($driveResponse->getStatusCode() == 200) {
+    //             // Fetch the folder ID for "invoices"
+    //             $driveResponse = $client->request('GET', 'https://graph.microsoft.com/v1.0/me/drive/root/children', [
+    //                 'headers' => [
+    //                     'Authorization' => 'Bearer ' . $accessToken,
+    //                     'Accept' => 'application/json',
+    //                 ]
+    //             ]);
+            
+    //             $driveData = json_decode((string) $driveResponse->getBody(), true);
+            
+    //             // Find the "invoices" folder ID
+    //             foreach ($driveData['value'] as $item) {
+    //                 if ($item['name'] === 'invoices' && $item['folder']) {
+    //                     $utilityFolderId = $item['id'];
+    //                     break;
+    //                 }
+    //             }
+            
+    //             if (!$utilityFolderId) {
+    //                 return view('auth.callback', ['message' => 'Invoices folder not found', 'status' => 'error']);
+    //             }
+            
+    //             $excelFileName = 'invoice-data.xlsx';
+    //             $excelFilePath = "/invoices/$excelFileName";
+            
+    //             // Ensure file path does not contain null bytes
+    //             if (strpos($excelFilePath, "\0") !== false) {
+    //                 return view('auth.callback', ['message' => 'Invalid file path detected', 'status' => 'error']);
+    //             }
+            
+    //             // Step 1: Check if the Excel file already exists and download it
+    //             $existingData = [];
+    //             try {
+    //                 $fileResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/root:$excelFilePath:/content", [
+    //                     'headers' => [
+    //                         'Authorization' => 'Bearer ' . $accessToken,
+    //                         'Accept' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    //                     ]
+    //                 ]);
+            
+    //                 $existingExcelContent = $fileResponse->getBody()->getContents();
+            
+    //                 // Create a temporary file to handle the content
+    //                 $tempFile = tempnam(sys_get_temp_dir(), 'excel');
+    //                 file_put_contents($tempFile, $existingExcelContent);
+            
+    //                 // Load the existing Excel file content
+    //                 $existingData = Excel::toArray([], $tempFile);
+    //                 $existingData = $existingData[0]; 
+            
+    //                 // Clean up the temporary file
+    //                 unlink($tempFile);
+    //                 if (!empty($existingData)) {
+    //                     array_shift($existingData); // Remove the first row (header)
+    //                 }
+            
+    //             } catch (\Exception $e) {
+    //                 // If the file does not exist, proceed with an empty array
+    //                 \Log::info('No existing Excel file found: ' . $e->getMessage());
+    //                 $existingData = []; // Initialize an empty array if no data found
+    //             }
+            
+    //             // Step 2: List items in the "invoices" folder and gather new data
+    //             $filesResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/items/$utilityFolderId/children", [
+    //                 'headers' => [
+    //                     'Authorization' => 'Bearer ' . $accessToken,
+    //                     'Accept' => 'application/json',
+    //                 ]
+    //             ]);
+            
+    //             $filesData = json_decode((string) $filesResponse->getBody(), true);
+    //             $fileInfos = [];
+            
+    //             foreach ($filesData['value'] as $file) {
+    //                 // Check if file has been processed
+    //                 $processedFile = DB::table('processed_files')->where('file_id', $file['id'])->first();
+    //                 if ($processedFile) {
+    //                     continue;
+    //                 }
+            
+    //                 if (isset($file['file']) && strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) === 'pdf') {
+    //                     $pdfFileResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/items/{$file['id']}/content", [
+    //                         'headers' => [
+    //                             'Authorization' => 'Bearer ' . $accessToken,
+    //                             'Accept' => 'application/pdf',
+    //                         ]
+    //                     ]);
+            
+    //                     $pdfContentStream = $pdfFileResponse->getBody()->getContents();
+            
+    //                     try {
+    //                         $pdf = $parser->parseContent($pdfContentStream);
+    //                         $pdfContent = $pdf->getText();
+    //                         $invoiceNo = $this->extractInvoiceNo($pdfContent);
+    //                         $buyerSection = $this->extractBuyerSection($pdfContent);
+    //                         $gstins = $this->extractGSTINsFromBuyerSection($buyerSection);
+            
+    //                         $fileInfos[] = [
+    //                             'Subject' => $invoiceNo,
+    //                             'Bill to GST' => $gstins,
+    //                             'Attachment' => $file['@microsoft.graph.downloadUrl'],
+    //                             'Email Time' => $file['lastModifiedDateTime'],
+    //                         ];
+            
+    //                         // Mark file as processed
+    //                         DB::table('processed_files')->insert([
+    //                             'file_id' => $file['id'],
+    //                             'file_name' => $file['name'],
+    //                             'processed_at' => now(),
+    //                         ]);
+            
+    //                     } catch (\Exception $e) {
+
+    //                         return response()->json([
+    //                             'status' => 'error',
+    //                             'message' => 'PDF parsing failed:',
+    //                             'statuscode' => 422,
+    //                             'data' => $e->getMessage(),
+    //                         ]);
+    //                     }
+    //                 }
+    //             }
+            
+    //             // Step 3: Merge new data with existing data
+    //             $mergedData = array_merge($existingData, $fileInfos);
+            
+    //             // Step 4: Prepare the updated Excel file content
+    //             $excelContent = Excel::raw(new FileInfoExport($mergedData), \Maatwebsite\Excel\Excel::XLSX);
+            
+    //             // Step 5: Upload the updated Excel file
+    //             try {
+    //                 $response = $client->request('PUT', "https://graph.microsoft.com/v1.0/me/drive/root:$excelFilePath:/content", [
+    //                     'headers' => [
+    //                         'Authorization' => 'Bearer ' . $accessToken,
+    //                         'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    //                     ],
+    //                     'body' => $excelContent
+    //                 ]);
+
+    //                 \Log::info('Excel file upload response: ' . $response->getBody());
+    //             } catch (\Exception $e) {
+    //                 return response()->json([
+    //                     'status' => 'error',
+    //                     'message' => 'Error uploading Excel file',
+    //                     'statuscode' => 422,
+    //                     'data' => $e->getMessage(),
+    //                 ]);
+    //             }
+
+
+    //             return response()->json([
+    //                 'status' => 'success',
+    //                 'message' => 'PDF files found and processed',
+    //                 'statuscode' => 422,
+    //                 'data' => '',
+    //             ]);
+        
+    //         }
+            
+    //          else {
+    //             return response()->json([
+    //                 'status' => 'error',
+    //                 'message' => 'OneDrive not found',
+    //                 'statuscode' => 422,
+    //                 'data' => '',
+    //             ]);
+
+    //         }
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Authentication failed',
+    //             'statuscode' => 422,
+    //             'data' => $e->getMessage(),
+    //         ]);
+            
+    //     }
+    // }
+
+    public function readPdf(Request $request)
     {
-       // \Log::info('Request state: ' . $request->input('state')); // Log incoming state for debugging
-    
-        $state = $request->input('state'); 
-        $storedState = session('oauth2state'); 
-    
-        // Now, handle the code
-        $code = $request->input('code');
-        if (empty($code)) {
-            return view('auth.callback', ['message' => 'Authorization code not found', 'status' => 'error']);
-        }
-    
+        $tenantId = env('MICROSOFT_TENANTID');
+        $clientId = env('MICROSOFT_CLIENT_ID');
+        $clientSecret = env('MICROSOFT_CLIENT_SECRET');
+
+        $url = "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token";
+
+        $data = [
+            'grant_type' => 'client_credentials',
+            'client_id' => $clientId,
+            'client_secret' => $clientSecret,
+            'scope' => 'https://graph.microsoft.com/.default',
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        $response = json_decode($response, true);
+
+       
         try {
-            // Request access token
-            $accessToken = $this->provider->getAccessToken('authorization_code', [
-                'code' => $code,
-                'redirect_uri' => env('MICROSOFT_REDIRECT_URL'),
-                'scope' => ['User.Read', 'openid', 'profile', 'Files.ReadWrite']
-            ]);
-    
-            // Store the access token in the session
-            session(['access_token' => $accessToken->getToken()]);
-    
             // Use the access token to make API requests
             $client = new Client();
             $parser = new Parser();
-            $accessToken = session('access_token'); // Retrieve token from the session
-    
-            // Check if the OneDrive exists
-            $driveResponse = $client->request('GET', 'https://graph.microsoft.com/v1.0/me/drive', [
+            $accessToken = $response['access_token'];
+        
+            $userId = "do-not-reply@frontierag.com";
+            // Check if the OneDrive exists for the user
+            $driveResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/users/$userId/drive", [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $accessToken,
                     'Accept' => 'application/json',
                 ]
             ]);
-    
+        
             if ($driveResponse->getStatusCode() == 200) {
                 // Fetch the folder ID for "invoices"
-                $driveResponse = $client->request('GET', 'https://graph.microsoft.com/v1.0/me/drive/root/children', [
+                $driveResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/users/$userId/drive/root/children", [
                     'headers' => [
                         'Authorization' => 'Bearer ' . $accessToken,
                         'Accept' => 'application/json',
@@ -328,7 +550,7 @@ class OAuthController extends Controller
                 // Step 1: Check if the Excel file already exists and download it
                 $existingData = [];
                 try {
-                    $fileResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/root:$excelFilePath:/content", [
+                    $fileResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/users/$userId/drive/root:$excelFilePath:/content", [
                         'headers' => [
                             'Authorization' => 'Bearer ' . $accessToken,
                             'Accept' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -358,7 +580,7 @@ class OAuthController extends Controller
                 }
             
                 // Step 2: List items in the "invoices" folder and gather new data
-                $filesResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/items/$utilityFolderId/children", [
+                $filesResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/users/$userId/drive/items/$utilityFolderId/children", [
                     'headers' => [
                         'Authorization' => 'Bearer ' . $accessToken,
                         'Accept' => 'application/json',
@@ -376,7 +598,7 @@ class OAuthController extends Controller
                     }
             
                     if (isset($file['file']) && strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) === 'pdf') {
-                        $pdfFileResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/items/{$file['id']}/content", [
+                        $pdfFileResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/users/$userId/drive/items/{$file['id']}/content", [
                             'headers' => [
                                 'Authorization' => 'Bearer ' . $accessToken,
                                 'Accept' => 'application/pdf',
@@ -407,7 +629,6 @@ class OAuthController extends Controller
                             ]);
             
                         } catch (\Exception $e) {
-
                             return response()->json([
                                 'status' => 'error',
                                 'message' => 'PDF parsing failed:',
@@ -426,14 +647,14 @@ class OAuthController extends Controller
             
                 // Step 5: Upload the updated Excel file
                 try {
-                    $response = $client->request('PUT', "https://graph.microsoft.com/v1.0/me/drive/root:$excelFilePath:/content", [
+                    $response = $client->request('PUT', "https://graph.microsoft.com/v1.0/users/$userId/drive/root:$excelFilePath:/content", [
                         'headers' => [
                             'Authorization' => 'Bearer ' . $accessToken,
                             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         ],
                         'body' => $excelContent
                     ]);
-
+        
                     \Log::info('Excel file upload response: ' . $response->getBody());
                 } catch (\Exception $e) {
                     return response()->json([
@@ -443,25 +664,20 @@ class OAuthController extends Controller
                         'data' => $e->getMessage(),
                     ]);
                 }
-
-
+        
                 return response()->json([
                     'status' => 'success',
                     'message' => 'PDF files found and processed',
                     'statuscode' => 422,
                     'data' => '',
                 ]);
-        
-            }
-            
-             else {
+            } else {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'OneDrive not found',
                     'statuscode' => 422,
                     'data' => '',
                 ]);
-
             }
         } catch (\Exception $e) {
             return response()->json([
@@ -470,8 +686,9 @@ class OAuthController extends Controller
                 'statuscode' => 422,
                 'data' => $e->getMessage(),
             ]);
-            
         }
+        
+
     }
 
     protected function extractInvoiceNo($text)
