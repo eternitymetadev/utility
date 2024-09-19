@@ -47,431 +47,430 @@ class OAuthController extends Controller
         return redirect($authorizationUrl);
     }
     
-
     // public function handleProviderCallback(Request $request)
-    // {
-    //    // \Log::info('Request state: ' . $request->input('state')); // Log incoming state for debugging
-    
-    //     $state = $request->input('state'); 
-    //     $storedState = session('oauth2state'); 
-    
-    //     // Now, handle the code
-    //     $code = $request->input('code');
-    //     if (empty($code)) {
-    //         return view('auth.callback', ['message' => 'Authorization code not found', 'status' => 'error']);
-    //     }
-    
-    //     try {
-    //         // Request access token
-    //         $accessToken = $this->provider->getAccessToken('authorization_code', [
-    //             'code' => $code,
-    //             'redirect_uri' => env('MICROSOFT_REDIRECT_URL'),
-    //             'scope' => ['User.Read', 'openid', 'profile', 'Files.ReadWrite']
-    //         ]);
-    
-    //         // Store the access token in the session
-    //         session(['access_token' => $accessToken->getToken()]);
-    
-    //         // Use the access token to make API requests
-    //         $client = new Client();
-    //         $parser = new Parser();
-    //         $accessToken = session('access_token'); // Retrieve token from the session
-    
-    //         // Check if the OneDrive exists
-    //         $driveResponse = $client->request('GET', 'https://graph.microsoft.com/v1.0/me/drive', [
-    //             'headers' => [
-    //                 'Authorization' => 'Bearer ' . $accessToken,
-    //                 'Accept' => 'application/json',
-    //             ]
-    //         ]);
-    
-    //         if ($driveResponse->getStatusCode() == 200) {
-    //             // Fetch the folder ID for "utility"
-    //             $driveResponse = $client->request('GET', 'https://graph.microsoft.com/v1.0/me/drive/root/children', [
-    //                 'headers' => [
-    //                     'Authorization' => 'Bearer ' . $accessToken,
-    //                     'Accept' => 'application/json',
-    //                 ]
-    //             ]);
-
-    //             $driveData = json_decode((string) $driveResponse->getBody(), true);
-    //             $utilityFolder = null;
-
-    //             // Find the "utility" folder ID
-    //             foreach ($driveData['value'] as $item) {
-    //                 if ($item['name'] === 'utility' && $item['folder']) {
-    //                     $utilityFolderId = $item['id'];
-    //                     break;
-    //                 }
-    //             }
-
-    //             if (!$utilityFolderId) {
-    //                 return view('auth.callback', ['message' => 'Utility folder not found', 'status' => 'error']);
-    //             }
-
-    //             // List items in the "utility" folder
-    //             $filesResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/items/$utilityFolderId/children", [
-    //                 'headers' => [
-    //                     'Authorization' => 'Bearer ' . $accessToken,
-    //                     'Accept' => 'application/json',
-    //                 ]
-    //             ]);
-               
-    //             $filesData = json_decode((string) $filesResponse->getBody(), true);
-               
-    //             $fi = 0;
-    //             $fileInfos = [];
-    //             foreach ($filesData['value'] as $file) {
-    //                 if (isset($file['file']) && strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) === 'pdf') {
-    //                     // Fetch PDF content
-    //                     $pdfContent = null;
-    //                     $pdfFileResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/items/{$file['id']}/content", [
-    //                         'headers' => [
-    //                             'Authorization' => 'Bearer ' . $accessToken,
-    //                             'Accept' => 'application/pdf',
-    //                         ]
-    //                     ]);
+        // {
+        //    // \Log::info('Request state: ' . $request->input('state')); // Log incoming state for debugging
         
-    //                     $pdfContentStream = $pdfFileResponse->getBody()->getContents();
-
-    //                     try {
-    //                         $pdf = $parser->parseContent($pdfContentStream);
-    //                         $pdfContent = $pdf->getText();
-    //                         $billing_pattern = '/Billing Address\s*:(.*?)Shipping Address\s*:/s';
-  
-    //                         if (preg_match($billing_pattern, $pdfContent, $matches)) {
-    //                             $billingAddress = trim($matches[1]); 
-                                
-    //                             // Split the address by line breaks into an array
-    //                             $addressLines = preg_split('/\r\n|\r|\n/', $billingAddress);
-                            
-    //                             // Initialize address columns
-    //                             $address1 = isset($addressLines[0]) ? $addressLines[0] : '';
-    //                             $address2 = isset($addressLines[1]) ? $addressLines[1] : '';
-    //                             $address3 = isset($addressLines[2]) ? $addressLines[2] : '';
-                                
-    //                             // If there are more than 4 lines, concatenate the remaining lines in the 4th column
-    //                             $address4 = isset($addressLines[3]) ? $addressLines[3] : '';
-    //                             if (count($addressLines) > 4) {
-    //                                 $remainingLines = array_slice($addressLines, 4);
-    //                                 $address4 .= ' ' . implode(' ', $remainingLines);
-    //                             }
-                            
-    //                         } 
-    //                         $stateut = $this->extractField($pdfContent, 'State/UT Code');
-    //                         $gstreg = $this->extractField($pdfContent, 'GST Registration No');
-    //                         $placeOfSupply = $this->extractField($pdfContent, 'Place of supply');
-    //                         $placeOfdelivery = $this->extractField($pdfContent, 'Place of delivery');
-    //                         $invoice_details = $this->extractField($pdfContent, 'Invoice Details');
-    //                         $invoice_date = $this->extractField($pdfContent, 'Invoice Date');
-    //                         $invoice_number= $this->extractField($pdfContent, 'Invoice number');
-    //                         $order_number= $this->extractFieldopt($pdfContent, 'Order Number');
-    //                         $order_date= $this->extractFieldopt($pdfContent, 'Order Date');
-    //                         $products = $this->extractProducts($pdfContent);
-    //                         $productDetail = [];
-    //                         foreach ($products as $product) {
-    //                             //dd($product);
-    //                             $description = $product['Description'];
-    //                             $productDetail['sr'][] = $product['SlNo'];
-    //                             $productDetail['description'][] = $this->getProduct($description);
-    //                             $productDetail['unit_price'][] = $product['UnitPrice'];
-    //                             $productDetail['qty'][] = $product['Qty'];
-    //                         }
-                           
-    //                         $combinedProductDetails = [];
-    //                         foreach ($productDetail['description'] as $index => $description) {
-    //                             $combinedProductDetails[] = [
-    //                                 'sr' => $productDetail['sr'][$index],
-    //                                 'description' => $description,
-    //                                 'unit_price' => $productDetail['unit_price'][$index],
-    //                                 'qty' => $productDetail['qty'][$index]
-    //                             ];
-    //                         }
-                            
-    //                         $invoiceNo = $this->extractInvoiceNo($pdfContent);
-    //                         $buyerSection = $this->extractBuyerSection($pdfContent);
-    //                         $gstins = $this->extractGSTINsFromBuyerSection($buyerSection);
-                            
-    //                     } catch (\Exception $e) {
-    //                         \Log::error('PDF parsing failed: ' . $e->getMessage());
-    //                     }
+        //     $state = $request->input('state'); 
+        //     $storedState = session('oauth2state'); 
         
-    //                     $fileInfos[$fi] = [
-    //                         'Order Number' => $order_number,
-    //                         'Order Date' => $order_date,
-    //                         'GST Registration No' => $gstreg,
-    //                         'Address Line 1' => $address1,
-    //                         'Address Line 2' => $address2,
-    //                         'Address Line 3' => $address3,
-    //                         'Address Line 4' => $address4,
-    //                         'State/UT Code' => $stateut,
-    //                         'Place of supply' => $placeOfSupply,
-    //                         'Place of delivery' => $placeOfdelivery,
-    //                         'Invoice Number' => $invoice_number,
-    //                         'Invoice Details' => $invoice_details,
-    //                         'Invoice Date' => $invoice_date,
-    //                         'Attachment' => $file['@microsoft.graph.downloadUrl'],
-    //                     ];
-    //                     $p = 0;
+        //     // Now, handle the code
+        //     $code = $request->input('code');
+        //     if (empty($code)) {
+        //         return view('auth.callback', ['message' => 'Authorization code not found', 'status' => 'error']);
+        //     }
+        
+        //     try {
+        //         // Request access token
+        //         $accessToken = $this->provider->getAccessToken('authorization_code', [
+        //             'code' => $code,
+        //             'redirect_uri' => env('MICROSOFT_REDIRECT_URL'),
+        //             'scope' => ['User.Read', 'openid', 'profile', 'Files.ReadWrite']
+        //         ]);
+        
+        //         // Store the access token in the session
+        //         session(['access_token' => $accessToken->getToken()]);
+        
+        //         // Use the access token to make API requests
+        //         $client = new Client();
+        //         $parser = new Parser();
+        //         $accessToken = session('access_token'); // Retrieve token from the session
+        
+        //         // Check if the OneDrive exists
+        //         $driveResponse = $client->request('GET', 'https://graph.microsoft.com/v1.0/me/drive', [
+        //             'headers' => [
+        //                 'Authorization' => 'Bearer ' . $accessToken,
+        //                 'Accept' => 'application/json',
+        //             ]
+        //         ]);
+        
+        //         if ($driveResponse->getStatusCode() == 200) {
+        //             // Fetch the folder ID for "utility"
+        //             $driveResponse = $client->request('GET', 'https://graph.microsoft.com/v1.0/me/drive/root/children', [
+        //                 'headers' => [
+        //                     'Authorization' => 'Bearer ' . $accessToken,
+        //                     'Accept' => 'application/json',
+        //                 ]
+        //             ]);
+
+        //             $driveData = json_decode((string) $driveResponse->getBody(), true);
+        //             $utilityFolder = null;
+
+        //             // Find the "utility" folder ID
+        //             foreach ($driveData['value'] as $item) {
+        //                 if ($item['name'] === 'utility' && $item['folder']) {
+        //                     $utilityFolderId = $item['id'];
+        //                     break;
+        //                 }
+        //             }
+
+        //             if (!$utilityFolderId) {
+        //                 return view('auth.callback', ['message' => 'Utility folder not found', 'status' => 'error']);
+        //             }
+
+        //             // List items in the "utility" folder
+        //             $filesResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/items/$utilityFolderId/children", [
+        //                 'headers' => [
+        //                     'Authorization' => 'Bearer ' . $accessToken,
+        //                     'Accept' => 'application/json',
+        //                 ]
+        //             ]);
+                
+        //             $filesData = json_decode((string) $filesResponse->getBody(), true);
+                
+        //             $fi = 0;
+        //             $fileInfos = [];
+        //             foreach ($filesData['value'] as $file) {
+        //                 if (isset($file['file']) && strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) === 'pdf') {
+        //                     // Fetch PDF content
+        //                     $pdfContent = null;
+        //                     $pdfFileResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/items/{$file['id']}/content", [
+        //                         'headers' => [
+        //                             'Authorization' => 'Bearer ' . $accessToken,
+        //                             'Accept' => 'application/pdf',
+        //                         ]
+        //                     ]);
+            
+        //                     $pdfContentStream = $pdfFileResponse->getBody()->getContents();
+
+        //                     try {
+        //                         $pdf = $parser->parseContent($pdfContentStream);
+        //                         $pdfContent = $pdf->getText();
+        //                         $billing_pattern = '/Billing Address\s*:(.*?)Shipping Address\s*:/s';
+    
+        //                         if (preg_match($billing_pattern, $pdfContent, $matches)) {
+        //                             $billingAddress = trim($matches[1]); 
+                                    
+        //                             // Split the address by line breaks into an array
+        //                             $addressLines = preg_split('/\r\n|\r|\n/', $billingAddress);
+                                
+        //                             // Initialize address columns
+        //                             $address1 = isset($addressLines[0]) ? $addressLines[0] : '';
+        //                             $address2 = isset($addressLines[1]) ? $addressLines[1] : '';
+        //                             $address3 = isset($addressLines[2]) ? $addressLines[2] : '';
+                                    
+        //                             // If there are more than 4 lines, concatenate the remaining lines in the 4th column
+        //                             $address4 = isset($addressLines[3]) ? $addressLines[3] : '';
+        //                             if (count($addressLines) > 4) {
+        //                                 $remainingLines = array_slice($addressLines, 4);
+        //                                 $address4 .= ' ' . implode(' ', $remainingLines);
+        //                             }
+                                
+        //                         } 
+        //                         $stateut = $this->extractField($pdfContent, 'State/UT Code');
+        //                         $gstreg = $this->extractField($pdfContent, 'GST Registration No');
+        //                         $placeOfSupply = $this->extractField($pdfContent, 'Place of supply');
+        //                         $placeOfdelivery = $this->extractField($pdfContent, 'Place of delivery');
+        //                         $invoice_details = $this->extractField($pdfContent, 'Invoice Details');
+        //                         $invoice_date = $this->extractField($pdfContent, 'Invoice Date');
+        //                         $invoice_number= $this->extractField($pdfContent, 'Invoice number');
+        //                         $order_number= $this->extractFieldopt($pdfContent, 'Order Number');
+        //                         $order_date= $this->extractFieldopt($pdfContent, 'Order Date');
+        //                         $products = $this->extractProducts($pdfContent);
+        //                         $productDetail = [];
+        //                         foreach ($products as $product) {
+        //                             //dd($product);
+        //                             $description = $product['Description'];
+        //                             $productDetail['sr'][] = $product['SlNo'];
+        //                             $productDetail['description'][] = $this->getProduct($description);
+        //                             $productDetail['unit_price'][] = $product['UnitPrice'];
+        //                             $productDetail['qty'][] = $product['Qty'];
+        //                         }
+                            
+        //                         $combinedProductDetails = [];
+        //                         foreach ($productDetail['description'] as $index => $description) {
+        //                             $combinedProductDetails[] = [
+        //                                 'sr' => $productDetail['sr'][$index],
+        //                                 'description' => $description,
+        //                                 'unit_price' => $productDetail['unit_price'][$index],
+        //                                 'qty' => $productDetail['qty'][$index]
+        //                             ];
+        //                         }
+                                
+        //                         $invoiceNo = $this->extractInvoiceNo($pdfContent);
+        //                         $buyerSection = $this->extractBuyerSection($pdfContent);
+        //                         $gstins = $this->extractGSTINsFromBuyerSection($buyerSection);
+                                
+        //                     } catch (\Exception $e) {
+        //                         \Log::error('PDF parsing failed: ' . $e->getMessage());
+        //                     }
+            
+        //                     $fileInfos[$fi] = [
+        //                         'Order Number' => $order_number,
+        //                         'Order Date' => $order_date,
+        //                         'GST Registration No' => $gstreg,
+        //                         'Address Line 1' => $address1,
+        //                         'Address Line 2' => $address2,
+        //                         'Address Line 3' => $address3,
+        //                         'Address Line 4' => $address4,
+        //                         'State/UT Code' => $stateut,
+        //                         'Place of supply' => $placeOfSupply,
+        //                         'Place of delivery' => $placeOfdelivery,
+        //                         'Invoice Number' => $invoice_number,
+        //                         'Invoice Details' => $invoice_details,
+        //                         'Invoice Date' => $invoice_date,
+        //                         'Attachment' => $file['@microsoft.graph.downloadUrl'],
+        //                     ];
+        //                     $p = 0;
+                            
+        //                     foreach ($combinedProductDetails as $product) {
+        //                         $p++;
+        //                         if($product['description'] == 'Not found'){
+        //                             continue;
+        //                          }
+        //                         $fileInfos[$fi]['Name P' . $p] = $product['description'];
+        //                         $fileInfos[$fi]['Unit Price P' . $p] = $product['unit_price'];
+        //                         $fileInfos[$fi]['Qty P' . $p] = $product['qty'];
+        //                         //\Log::info('Combined Product Details for File ' . $fi . ': ', $combinedProductDetails);
+
+        //                     }
                         
-    //                     foreach ($combinedProductDetails as $product) {
-    //                         $p++;
-    //                         if($product['description'] == 'Not found'){
-    //                             continue;
-    //                          }
-    //                         $fileInfos[$fi]['Name P' . $p] = $product['description'];
-    //                         $fileInfos[$fi]['Unit Price P' . $p] = $product['unit_price'];
-    //                         $fileInfos[$fi]['Qty P' . $p] = $product['qty'];
-    //                         //\Log::info('Combined Product Details for File ' . $fi . ': ', $combinedProductDetails);
+        //                 }
+        //                 $fi++;
+        //             }
+        //             $excelFileName = 'orders-data.xlsx';
+        //             $excelFilePath = "/utility/$excelFileName";
+            
+        //             // Prepare the Excel file content
+        //             $excelContent = Excel::raw(new FileInfoExport($fileInfos), \Maatwebsite\Excel\Excel::XLSX);
 
-    //                     }
-                       
-    //                 }
-    //                 $fi++;
-    //             }
-    //             $excelFileName = 'orders-data.xlsx';
-    //             $excelFilePath = "/utility/$excelFileName";
+        //             // Upload the Excel file to the 'utility' folder
+        //             $response = $client->request('PUT', "https://graph.microsoft.com/v1.0/me/drive/root:$excelFilePath:/content", [
+        //                 'headers' => [
+        //                     'Authorization' => 'Bearer ' . $accessToken,
+        //                     'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        //                 ],
+        //                 'body' => $excelContent
+        //             ]);
+
+        //             \Log::info('Excel file upload response: ' . $response->getBody());
+        //             return view('auth.callback', ['message' => 'PDF files found', 'status' => 'success']);
+
+
+        //         } else {
+        //             return view('auth.callback', ['message' => 'OneDrive not found', 'status' => 'error']);
+        //         }
+        //     } catch (\Exception $e) {
+        //         \Log::error('Authentication failed: ' . $e->getMessage());
+        //         return view('auth.callback', ['message' => 'Authentication failed: ' . $e->getMessage(), 'status' => 'error']);
+        //     }
+        // }
+
+        // public function handleProviderCallback(Request $request)
+        // {
+        //    // \Log::info('Request state: ' . $request->input('state')); // Log incoming state for debugging
         
-    //             // Prepare the Excel file content
-    //             $excelContent = Excel::raw(new FileInfoExport($fileInfos), \Maatwebsite\Excel\Excel::XLSX);
-
-    //             // Upload the Excel file to the 'utility' folder
-    //             $response = $client->request('PUT', "https://graph.microsoft.com/v1.0/me/drive/root:$excelFilePath:/content", [
-    //                 'headers' => [
-    //                     'Authorization' => 'Bearer ' . $accessToken,
-    //                     'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    //                 ],
-    //                 'body' => $excelContent
-    //             ]);
-
-    //             \Log::info('Excel file upload response: ' . $response->getBody());
-    //             return view('auth.callback', ['message' => 'PDF files found', 'status' => 'success']);
-
-
-    //         } else {
-    //             return view('auth.callback', ['message' => 'OneDrive not found', 'status' => 'error']);
-    //         }
-    //     } catch (\Exception $e) {
-    //         \Log::error('Authentication failed: ' . $e->getMessage());
-    //         return view('auth.callback', ['message' => 'Authentication failed: ' . $e->getMessage(), 'status' => 'error']);
-    //     }
-    // }
-
-    // public function handleProviderCallback(Request $request)
-    // {
-    //    // \Log::info('Request state: ' . $request->input('state')); // Log incoming state for debugging
-    
-    //     $state = $request->input('state'); 
-    //     $storedState = session('oauth2state'); 
-    
-    //     // Now, handle the code
-    //     $code = $request->input('code');
-    //     if (empty($code)) {
-    //         return view('auth.callback', ['message' => 'Authorization code not found', 'status' => 'error']);
-    //     }
-    
-    //     try {
-    //         // Request access token
-    //         $accessToken = $this->provider->getAccessToken('authorization_code', [
-    //             'code' => $code,
-    //             'redirect_uri' => env('MICROSOFT_REDIRECT_URL'),
-    //             'scope' => ['User.Read', 'openid', 'profile', 'Files.ReadWrite']
-    //         ]);
-    
-    //         // Store the access token in the session
-    //         session(['access_token' => $accessToken->getToken()]);
-    
-    //         // Use the access token to make API requests
-    //         $client = new Client();
-    //         $parser = new Parser();
-    //         $accessToken = session('access_token'); // Retrieve token from the session
-    
-    //         // Check if the OneDrive exists
-    //         $driveResponse = $client->request('GET', 'https://graph.microsoft.com/v1.0/me/drive', [
-    //             'headers' => [
-    //                 'Authorization' => 'Bearer ' . $accessToken,
-    //                 'Accept' => 'application/json',
-    //             ]
-    //         ]);
-    
-    //         if ($driveResponse->getStatusCode() == 200) {
-    //             // Fetch the folder ID for "invoices"
-    //             $driveResponse = $client->request('GET', 'https://graph.microsoft.com/v1.0/me/drive/root/children', [
-    //                 'headers' => [
-    //                     'Authorization' => 'Bearer ' . $accessToken,
-    //                     'Accept' => 'application/json',
-    //                 ]
-    //             ]);
-            
-    //             $driveData = json_decode((string) $driveResponse->getBody(), true);
-            
-    //             // Find the "invoices" folder ID
-    //             foreach ($driveData['value'] as $item) {
-    //                 if ($item['name'] === 'invoices' && $item['folder']) {
-    //                     $utilityFolderId = $item['id'];
-    //                     break;
-    //                 }
-    //             }
-            
-    //             if (!$utilityFolderId) {
-    //                 return view('auth.callback', ['message' => 'Invoices folder not found', 'status' => 'error']);
-    //             }
-            
-    //             $excelFileName = 'invoice-data.xlsx';
-    //             $excelFilePath = "/invoices/$excelFileName";
-            
-    //             // Ensure file path does not contain null bytes
-    //             if (strpos($excelFilePath, "\0") !== false) {
-    //                 return view('auth.callback', ['message' => 'Invalid file path detected', 'status' => 'error']);
-    //             }
-            
-    //             // Step 1: Check if the Excel file already exists and download it
-    //             $existingData = [];
-    //             try {
-    //                 $fileResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/root:$excelFilePath:/content", [
-    //                     'headers' => [
-    //                         'Authorization' => 'Bearer ' . $accessToken,
-    //                         'Accept' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    //                     ]
-    //                 ]);
-            
-    //                 $existingExcelContent = $fileResponse->getBody()->getContents();
-            
-    //                 // Create a temporary file to handle the content
-    //                 $tempFile = tempnam(sys_get_temp_dir(), 'excel');
-    //                 file_put_contents($tempFile, $existingExcelContent);
-            
-    //                 // Load the existing Excel file content
-    //                 $existingData = Excel::toArray([], $tempFile);
-    //                 $existingData = $existingData[0]; 
-            
-    //                 // Clean up the temporary file
-    //                 unlink($tempFile);
-    //                 if (!empty($existingData)) {
-    //                     array_shift($existingData); // Remove the first row (header)
-    //                 }
-            
-    //             } catch (\Exception $e) {
-    //                 // If the file does not exist, proceed with an empty array
-    //                 \Log::info('No existing Excel file found: ' . $e->getMessage());
-    //                 $existingData = []; // Initialize an empty array if no data found
-    //             }
-            
-    //             // Step 2: List items in the "invoices" folder and gather new data
-    //             $filesResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/items/$utilityFolderId/children", [
-    //                 'headers' => [
-    //                     'Authorization' => 'Bearer ' . $accessToken,
-    //                     'Accept' => 'application/json',
-    //                 ]
-    //             ]);
-            
-    //             $filesData = json_decode((string) $filesResponse->getBody(), true);
-    //             $fileInfos = [];
-            
-    //             foreach ($filesData['value'] as $file) {
-    //                 // Check if file has been processed
-    //                 $processedFile = DB::table('processed_files')->where('file_id', $file['id'])->first();
-    //                 if ($processedFile) {
-    //                     continue;
-    //                 }
-            
-    //                 if (isset($file['file']) && strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) === 'pdf') {
-    //                     $pdfFileResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/items/{$file['id']}/content", [
-    //                         'headers' => [
-    //                             'Authorization' => 'Bearer ' . $accessToken,
-    //                             'Accept' => 'application/pdf',
-    //                         ]
-    //                     ]);
-            
-    //                     $pdfContentStream = $pdfFileResponse->getBody()->getContents();
-            
-    //                     try {
-    //                         $pdf = $parser->parseContent($pdfContentStream);
-    //                         $pdfContent = $pdf->getText();
-    //                         $invoiceNo = $this->extractInvoiceNo($pdfContent);
-    //                         $buyerSection = $this->extractBuyerSection($pdfContent);
-    //                         $gstins = $this->extractGSTINsFromBuyerSection($buyerSection);
-            
-    //                         $fileInfos[] = [
-    //                             'Subject' => $invoiceNo,
-    //                             'Bill to GST' => $gstins,
-    //                             'Attachment' => $file['@microsoft.graph.downloadUrl'],
-    //                             'Email Time' => $file['lastModifiedDateTime'],
-    //                         ];
-            
-    //                         // Mark file as processed
-    //                         DB::table('processed_files')->insert([
-    //                             'file_id' => $file['id'],
-    //                             'file_name' => $file['name'],
-    //                             'processed_at' => now(),
-    //                         ]);
-            
-    //                     } catch (\Exception $e) {
-
-    //                         return response()->json([
-    //                             'status' => 'error',
-    //                             'message' => 'PDF parsing failed:',
-    //                             'statuscode' => 422,
-    //                             'data' => $e->getMessage(),
-    //                         ]);
-    //                     }
-    //                 }
-    //             }
-            
-    //             // Step 3: Merge new data with existing data
-    //             $mergedData = array_merge($existingData, $fileInfos);
-            
-    //             // Step 4: Prepare the updated Excel file content
-    //             $excelContent = Excel::raw(new FileInfoExport($mergedData), \Maatwebsite\Excel\Excel::XLSX);
-            
-    //             // Step 5: Upload the updated Excel file
-    //             try {
-    //                 $response = $client->request('PUT', "https://graph.microsoft.com/v1.0/me/drive/root:$excelFilePath:/content", [
-    //                     'headers' => [
-    //                         'Authorization' => 'Bearer ' . $accessToken,
-    //                         'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    //                     ],
-    //                     'body' => $excelContent
-    //                 ]);
-
-    //                 \Log::info('Excel file upload response: ' . $response->getBody());
-    //             } catch (\Exception $e) {
-    //                 return response()->json([
-    //                     'status' => 'error',
-    //                     'message' => 'Error uploading Excel file',
-    //                     'statuscode' => 422,
-    //                     'data' => $e->getMessage(),
-    //                 ]);
-    //             }
-
-
-    //             return response()->json([
-    //                 'status' => 'success',
-    //                 'message' => 'PDF files found and processed',
-    //                 'statuscode' => 422,
-    //                 'data' => '',
-    //             ]);
+        //     $state = $request->input('state'); 
+        //     $storedState = session('oauth2state'); 
         
-    //         }
-            
-    //          else {
-    //             return response()->json([
-    //                 'status' => 'error',
-    //                 'message' => 'OneDrive not found',
-    //                 'statuscode' => 422,
-    //                 'data' => '',
-    //             ]);
+        //     // Now, handle the code
+        //     $code = $request->input('code');
+        //     if (empty($code)) {
+        //         return view('auth.callback', ['message' => 'Authorization code not found', 'status' => 'error']);
+        //     }
+        
+        //     try {
+        //         // Request access token
+        //         $accessToken = $this->provider->getAccessToken('authorization_code', [
+        //             'code' => $code,
+        //             'redirect_uri' => env('MICROSOFT_REDIRECT_URL'),
+        //             'scope' => ['User.Read', 'openid', 'profile', 'Files.ReadWrite']
+        //         ]);
+        
+        //         // Store the access token in the session
+        //         session(['access_token' => $accessToken->getToken()]);
+        
+        //         // Use the access token to make API requests
+        //         $client = new Client();
+        //         $parser = new Parser();
+        //         $accessToken = session('access_token'); // Retrieve token from the session
+        
+        //         // Check if the OneDrive exists
+        //         $driveResponse = $client->request('GET', 'https://graph.microsoft.com/v1.0/me/drive', [
+        //             'headers' => [
+        //                 'Authorization' => 'Bearer ' . $accessToken,
+        //                 'Accept' => 'application/json',
+        //             ]
+        //         ]);
+        
+        //         if ($driveResponse->getStatusCode() == 200) {
+        //             // Fetch the folder ID for "invoices"
+        //             $driveResponse = $client->request('GET', 'https://graph.microsoft.com/v1.0/me/drive/root/children', [
+        //                 'headers' => [
+        //                     'Authorization' => 'Bearer ' . $accessToken,
+        //                     'Accept' => 'application/json',
+        //                 ]
+        //             ]);
+                
+        //             $driveData = json_decode((string) $driveResponse->getBody(), true);
+                
+        //             // Find the "invoices" folder ID
+        //             foreach ($driveData['value'] as $item) {
+        //                 if ($item['name'] === 'invoices' && $item['folder']) {
+        //                     $utilityFolderId = $item['id'];
+        //                     break;
+        //                 }
+        //             }
+                
+        //             if (!$utilityFolderId) {
+        //                 return view('auth.callback', ['message' => 'Invoices folder not found', 'status' => 'error']);
+        //             }
+                
+        //             $excelFileName = 'invoice-data.xlsx';
+        //             $excelFilePath = "/invoices/$excelFileName";
+                
+        //             // Ensure file path does not contain null bytes
+        //             if (strpos($excelFilePath, "\0") !== false) {
+        //                 return view('auth.callback', ['message' => 'Invalid file path detected', 'status' => 'error']);
+        //             }
+                
+        //             // Step 1: Check if the Excel file already exists and download it
+        //             $existingData = [];
+        //             try {
+        //                 $fileResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/root:$excelFilePath:/content", [
+        //                     'headers' => [
+        //                         'Authorization' => 'Bearer ' . $accessToken,
+        //                         'Accept' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        //                     ]
+        //                 ]);
+                
+        //                 $existingExcelContent = $fileResponse->getBody()->getContents();
+                
+        //                 // Create a temporary file to handle the content
+        //                 $tempFile = tempnam(sys_get_temp_dir(), 'excel');
+        //                 file_put_contents($tempFile, $existingExcelContent);
+                
+        //                 // Load the existing Excel file content
+        //                 $existingData = Excel::toArray([], $tempFile);
+        //                 $existingData = $existingData[0]; 
+                
+        //                 // Clean up the temporary file
+        //                 unlink($tempFile);
+        //                 if (!empty($existingData)) {
+        //                     array_shift($existingData); // Remove the first row (header)
+        //                 }
+                
+        //             } catch (\Exception $e) {
+        //                 // If the file does not exist, proceed with an empty array
+        //                 \Log::info('No existing Excel file found: ' . $e->getMessage());
+        //                 $existingData = []; // Initialize an empty array if no data found
+        //             }
+                
+        //             // Step 2: List items in the "invoices" folder and gather new data
+        //             $filesResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/items/$utilityFolderId/children", [
+        //                 'headers' => [
+        //                     'Authorization' => 'Bearer ' . $accessToken,
+        //                     'Accept' => 'application/json',
+        //                 ]
+        //             ]);
+                
+        //             $filesData = json_decode((string) $filesResponse->getBody(), true);
+        //             $fileInfos = [];
+                
+        //             foreach ($filesData['value'] as $file) {
+        //                 // Check if file has been processed
+        //                 $processedFile = DB::table('processed_files')->where('file_id', $file['id'])->first();
+        //                 if ($processedFile) {
+        //                     continue;
+        //                 }
+                
+        //                 if (isset($file['file']) && strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) === 'pdf') {
+        //                     $pdfFileResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/me/drive/items/{$file['id']}/content", [
+        //                         'headers' => [
+        //                             'Authorization' => 'Bearer ' . $accessToken,
+        //                             'Accept' => 'application/pdf',
+        //                         ]
+        //                     ]);
+                
+        //                     $pdfContentStream = $pdfFileResponse->getBody()->getContents();
+                
+        //                     try {
+        //                         $pdf = $parser->parseContent($pdfContentStream);
+        //                         $pdfContent = $pdf->getText();
+        //                         $invoiceNo = $this->extractInvoiceNo($pdfContent);
+        //                         $buyerSection = $this->extractBuyerSection($pdfContent);
+        //                         $gstins = $this->extractGSTINsFromBuyerSection($buyerSection);
+                
+        //                         $fileInfos[] = [
+        //                             'Subject' => $invoiceNo,
+        //                             'Bill to GST' => $gstins,
+        //                             'Attachment' => $file['@microsoft.graph.downloadUrl'],
+        //                             'Email Time' => $file['lastModifiedDateTime'],
+        //                         ];
+                
+        //                         // Mark file as processed
+        //                         DB::table('processed_files')->insert([
+        //                             'file_id' => $file['id'],
+        //                             'file_name' => $file['name'],
+        //                             'processed_at' => now(),
+        //                         ]);
+                
+        //                     } catch (\Exception $e) {
 
-    //         }
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => 'Authentication failed',
-    //             'statuscode' => 422,
-    //             'data' => $e->getMessage(),
-    //         ]);
+        //                         return response()->json([
+        //                             'status' => 'error',
+        //                             'message' => 'PDF parsing failed:',
+        //                             'statuscode' => 422,
+        //                             'data' => $e->getMessage(),
+        //                         ]);
+        //                     }
+        //                 }
+        //             }
+                
+        //             // Step 3: Merge new data with existing data
+        //             $mergedData = array_merge($existingData, $fileInfos);
+                
+        //             // Step 4: Prepare the updated Excel file content
+        //             $excelContent = Excel::raw(new FileInfoExport($mergedData), \Maatwebsite\Excel\Excel::XLSX);
+                
+        //             // Step 5: Upload the updated Excel file
+        //             try {
+        //                 $response = $client->request('PUT', "https://graph.microsoft.com/v1.0/me/drive/root:$excelFilePath:/content", [
+        //                     'headers' => [
+        //                         'Authorization' => 'Bearer ' . $accessToken,
+        //                         'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        //                     ],
+        //                     'body' => $excelContent
+        //                 ]);
+
+        //                 \Log::info('Excel file upload response: ' . $response->getBody());
+        //             } catch (\Exception $e) {
+        //                 return response()->json([
+        //                     'status' => 'error',
+        //                     'message' => 'Error uploading Excel file',
+        //                     'statuscode' => 422,
+        //                     'data' => $e->getMessage(),
+        //                 ]);
+        //             }
+
+
+        //             return response()->json([
+        //                 'status' => 'success',
+        //                 'message' => 'PDF files found and processed',
+        //                 'statuscode' => 422,
+        //                 'data' => '',
+        //             ]);
             
-    //     }
+        //         }
+                
+        //          else {
+        //             return response()->json([
+        //                 'status' => 'error',
+        //                 'message' => 'OneDrive not found',
+        //                 'statuscode' => 422,
+        //                 'data' => '',
+        //             ]);
+
+        //         }
+        //     } catch (\Exception $e) {
+        //         return response()->json([
+        //             'status' => 'error',
+        //             'message' => 'Authentication failed',
+        //             'statuscode' => 422,
+        //             'data' => $e->getMessage(),
+        //         ]);
+                
+        //     }
     // }
 
     public function readPdf(Request $request)
@@ -499,7 +498,8 @@ class OAuthController extends Controller
         curl_close($ch);
 
         $response = json_decode($response, true);
-
+        
+        //echo "<pre>"; print_r($response);die;
        
         try {
             // Use the access token to make API requests
