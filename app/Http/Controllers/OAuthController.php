@@ -615,6 +615,8 @@ class OAuthController extends Controller
                             $gstins = $this->extractGSTINsFromBuyerSection($buyerSection);
             
                             $fileInfos[] = [
+                                'Invoice no' => $invoiceNo,
+                                'Invoice timestamp' => $file['lastModifiedDateTime'],
                                 'Bill to GST' => $gstins,
                                 'Attachment' => $file['@microsoft.graph.downloadUrl'],
                             ];
