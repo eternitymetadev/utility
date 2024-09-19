@@ -507,7 +507,7 @@ class OAuthController extends Controller
             $parser = new Parser();
             $accessToken = $response['access_token'];
         
-            $userId = "do-not-reply@frontierag.com";
+            $userId = "ajay@frontierag.com";
             // Check if the OneDrive exists for the user
             $driveResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/users/$userId/drive", [
                 'headers' => [
@@ -615,10 +615,10 @@ class OAuthController extends Controller
                             $gstins = $this->extractGSTINsFromBuyerSection($buyerSection);
             
                             $fileInfos[] = [
-                                'Subject' => $invoiceNo,
+                                'Invoice no' => $invoiceNo,
+                                'Invoice timestamp' => $file['lastModifiedDateTime'],
                                 'Bill to GST' => $gstins,
                                 'Attachment' => $file['@microsoft.graph.downloadUrl'],
-                                'Email Time' => $file['lastModifiedDateTime'],
                             ];
             
                             // Mark file as processed
