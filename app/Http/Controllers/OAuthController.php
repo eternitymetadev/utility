@@ -9,6 +9,8 @@ use App\Exports\FileInfoExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Smalot\PdfParser\Parser;
 use Illuminate\Support\Facades\DB;
+use DateTime;
+use DateTimeZone;
 
 class OAuthController extends Controller
 {
@@ -543,7 +545,6 @@ class OAuthController extends Controller
                 $excelFileName = 'invoices-data.xlsx';
                 $excelFilePath = "/invoices/$excelFileName";
             
-                // Ensure file path does not contain null bytes
                 if (strpos($excelFilePath, "\0") !== false) {
                     return view('auth.callback', ['message' => 'Invalid file path detected', 'status' => 'error']);
                 }
@@ -564,7 +565,6 @@ class OAuthController extends Controller
                     // Create a temporary file to handle the content
                     $tempFile = storage_path('app/temp/excel_'.uniqid().'.xlsx');
                     file_put_contents($tempFile, $existingExcelContent);
-                    //file_put_contents($tempFile, $existingExcelContent);
             
                     // Load the existing Excel file content
                     $existingData = Excel::toArray([], $tempFile);
@@ -577,9 +577,8 @@ class OAuthController extends Controller
                     }
             
                 } catch (\Exception $e) {
-                    // If the file does not exist, proceed with an empty array
-                    \Log::info('No existing Excel file found: ' . $e->getMessage());
-                    $existingData = []; // Initialize an empty array if no data found
+                   // \Log::info('No existing Excel file found: ' . $e->getMessage());
+                    $existingData = [];
                 }
             
                 // Step 2: List items in the "invoices" folder and gather new data
@@ -616,14 +615,23 @@ class OAuthController extends Controller
                             $invoiceNo = $this->extractInvoiceNo($pdfContent);
                             $buyerSection = $this->extractBuyerSection($pdfContent);
                             $gstins = $this->extractGSTINsFromBuyerSection($buyerSection);
-            
+
+                            $lastModifiedDateTime = new \DateTime($file['lastModifiedDateTime'], new DateTimeZone('UTC'));
+
+                            // Convert to IST
+                            $lastModifiedDateTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
+
+                            // Format the date if needed
+                            $formattedDate = $lastModifiedDateTime->format('Y-m-d H:i:s');
+                                        
                             $fileInfos[] = [
                                 'Invoice no' => $invoiceNo,
-                                'Invoice timestamp' => $file['lastModifiedDateTime'],
+                                'Email timestamp' => $formattedDate,
                                 'Bill to GST' => $gstins,
                                 'Attachment' => $file['@microsoft.graph.downloadUrl'],
                             ];
             
+                            DB::beginTransaction();
                             // Mark file as processed
                             DB::table('processed_files')->insert([
                                 'file_id' => $file['id'],
@@ -642,8 +650,8 @@ class OAuthController extends Controller
                     }
                 }
             
-                \Log::info('Existing data:', $existingData);
-                \Log::info('New file data:', $fileInfos);
+                // \Log::info('Existing data:', $existingData);
+                // \Log::info('New file data:', $fileInfos);
                 // Step 3: Merge new data with existing data
                 $mergedData = array_merge($existingData, $fileInfos);
             
@@ -659,9 +667,10 @@ class OAuthController extends Controller
                         ],
                         'body' => $excelContent
                     ]);
-        
+                     DB::commit();
                     \Log::info('Excel file upload response: ' . $response->getBody());
                 } catch (\Exception $e) {
+                    DB::rollBack();
                     return response()->json([
                         'status' => 'error',
                         'message' => 'Error uploading Excel file',
