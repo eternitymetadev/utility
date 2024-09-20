@@ -540,7 +540,7 @@ class OAuthController extends Controller
                     return view('auth.callback', ['message' => 'Invoices folder not found', 'status' => 'error']);
                 }
             
-                $excelFileName = 'invoice-data.xlsx';
+                $excelFileName = 'invoices-data.xlsx';
                 $excelFilePath = "/invoices/$excelFileName";
             
                 // Ensure file path does not contain null bytes
