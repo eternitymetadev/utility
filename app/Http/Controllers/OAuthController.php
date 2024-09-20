@@ -631,7 +631,7 @@ class OAuthController extends Controller
                                 'Attachment' => $file['@microsoft.graph.downloadUrl'],
                             ];
             
-                            DB::beginTransaction();
+                           // DB::beginTransaction();
                             // Mark file as processed
                             DB::table('processed_files')->insert([
                                 'file_id' => $file['id'],
@@ -667,10 +667,10 @@ class OAuthController extends Controller
                         ],
                         'body' => $excelContent
                     ]);
-                     DB::commit();
+                    // DB::commit();
                     \Log::info('Excel file upload response: ' . $response->getBody());
                 } catch (\Exception $e) {
-                    DB::rollBack();
+                   // DB::rollBack();
                     return response()->json([
                         'status' => 'error',
                         'message' => 'Error uploading Excel file',
