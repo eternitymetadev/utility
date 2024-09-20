@@ -529,7 +529,7 @@ class OAuthController extends Controller
                 ]);
             
                 $driveData = json_decode((string) $driveResponse->getBody(), true);
-            
+              
                 // Find the "invoices" folder ID
                 foreach ($driveData['value'] as $item) {
                     if ($item['name'] === 'invoices' && $item['folder']) {
@@ -537,9 +537,31 @@ class OAuthController extends Controller
                         break;
                     }
                 }
-            
+
                 if (!$utilityFolderId) {
                     return view('auth.callback', ['message' => 'Invoices folder not found', 'status' => 'error']);
+                }
+
+                $utilityFolderResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/users/$userId/drive/items/$utilityFolderId/children", [
+                    'headers' => [
+                        'Authorization' => 'Bearer ' . $accessToken,
+                        'Accept' => 'application/json',
+                    ]
+                ]);
+
+                $utilityData = json_decode((string) $utilityFolderResponse->getBody(), true);
+
+
+                foreach ($utilityData['value'] as $item) {
+                    if ($item['name'] === 'PDF' && $item['folder']) {
+                        $pdfFolderId = $item['id'];
+                        break;
+                    }
+                }
+
+              //  echo "<pre>"; print_r($pdfFolderId);die;
+                if (!$pdfFolderId) {
+                    return view('auth.callback', ['message' => 'PDF folder not found', 'status' => 'error']);
                 }
             
                 $excelFileName = 'invoices-data.xlsx';
@@ -582,7 +604,7 @@ class OAuthController extends Controller
                 }
             
                 // Step 2: List items in the "invoices" folder and gather new data
-                $filesResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/users/$userId/drive/items/$utilityFolderId/children", [
+                $filesResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/users/$userId/drive/items/$pdfFolderId/children", [
                     'headers' => [
                         'Authorization' => 'Bearer ' . $accessToken,
                         'Accept' => 'application/json',
