@@ -551,6 +551,7 @@ class OAuthController extends Controller
                 // Step 1: Check if the Excel file already exists and download it
                 $existingData = [];
                 try {
+                    \Log::info('Trying to fetch existing Excel content.');
                     $fileResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/users/$userId/drive/root:$excelFilePath:/content", [
                         'headers' => [
                             'Authorization' => 'Bearer ' . $accessToken,
@@ -559,7 +560,7 @@ class OAuthController extends Controller
                     ]);
             
                     $existingExcelContent = $fileResponse->getBody()->getContents();
-            
+                    \Log::info('Existing Excel content fetched successfully.');
                     // Create a temporary file to handle the content
                     $tempFile = tempnam(sys_get_temp_dir(), 'excel');
                     file_put_contents($tempFile, $existingExcelContent);
@@ -640,6 +641,8 @@ class OAuthController extends Controller
                     }
                 }
             
+                \Log::info('Existing data:', $existingData);
+                \Log::info('New file data:', $fileInfos);
                 // Step 3: Merge new data with existing data
                 $mergedData = array_merge($existingData, $fileInfos);
             
