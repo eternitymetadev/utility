@@ -562,8 +562,9 @@ class OAuthController extends Controller
                     $existingExcelContent = $fileResponse->getBody()->getContents();
                     \Log::info('Existing Excel content fetched successfully.');
                     // Create a temporary file to handle the content
-                    $tempFile = tempnam(sys_get_temp_dir(), 'excel');
+                    $tempFile = storage_path('app/temp/excel_'.uniqid().'.xlsx');
                     file_put_contents($tempFile, $existingExcelContent);
+                    //file_put_contents($tempFile, $existingExcelContent);
             
                     // Load the existing Excel file content
                     $existingData = Excel::toArray([], $tempFile);
