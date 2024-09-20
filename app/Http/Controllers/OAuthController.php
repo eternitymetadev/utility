@@ -509,8 +509,8 @@ class OAuthController extends Controller
             $parser = new Parser();
             $accessToken = $response['access_token'];
         
-            // $userId = "do-not-reply@frontierag.com";
-            $userId = "ajay@frontierag.com";
+            //$userId = "do-not-reply@frontierag.com";
+             $userId = "ajay@frontierag.com";
             // Check if the OneDrive exists for the user
             $driveResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/users/$userId/drive", [
                 'headers' => [
@@ -662,13 +662,22 @@ class OAuthController extends Controller
                                 'Bill to GST' => $gstins,
                                 'Ship to Code' =>  @$shipToDetails['ship_to_id'],
                                 'Ship to Customer Name' =>  @$shipToDetails['company_name'],
+                                'Attachment' => $file['@microsoft.graph.downloadUrl'],
                                 'P1 Code' =>  @$allProductDetails[0]['product_code'],
                                 'P1 Description' => @$allProductDetails[0]['description'],
                                 'P1 Quantity' =>  @$allProductDetails[0]['quantity'],
                                 'P2 Code' =>  @$allProductDetails[1]['product_code'],
-                                'P12 Description' =>  @$allProductDetails[1]['description'],
+                                'P2 Description' =>  @$allProductDetails[1]['description'],
                                 'P2 Quantity' =>  @$allProductDetails[1]['quantity'],
-                                'Attachment' => $file['@microsoft.graph.downloadUrl'],
+                                'P3 Code' =>  @$allProductDetails[2]['product_code'],
+                                'P3 Description' => @$allProductDetails[2]['description'],
+                                'P3 Quantity' =>  @$allProductDetails[2]['quantity'],
+                                'P4 Code' =>  @$allProductDetails[3]['product_code'],
+                                'P4 Description' =>  @$allProductDetails[3]['description'],
+                                'P4 Quantity' =>  @$allProductDetails[3]['quantity'],
+                                'P5 Code' =>  @$allProductDetails[4]['product_code'],
+                                'P5 Description' =>  @$allProductDetails[4]['description'],
+                                'P5 Quantity' =>  @$allProductDetails[4]['quantity'],
                             ];
             
                            // DB::beginTransaction();
