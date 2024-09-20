@@ -509,7 +509,7 @@ class OAuthController extends Controller
             $parser = new Parser();
             $accessToken = $response['access_token'];
         
-            //$userId = "do-not-reply@frontierag.com";
+            // $userId = "do-not-reply@frontierag.com";
             $userId = "ajay@frontierag.com";
             // Check if the OneDrive exists for the user
             $driveResponse = $client->request('GET', "https://graph.microsoft.com/v1.0/users/$userId/drive", [
@@ -630,10 +630,20 @@ class OAuthController extends Controller
                         ]);
             
                         $pdfContentStream = $pdfFileResponse->getBody()->getContents();
+                        $pdf = $parser->parseContent($pdfContentStream);
+                        $pdfContent = $pdf->getText();
+                        
+                        $searchType = 'CREDIT NOTE';//Search for specific type
+                        $pdfType = $this->checkIfPDFContainsText($pdfContent,$searchType);
+                       
+                        if($pdfType == 1){
+                            continue;
+                        }
             
                         try {
-                            $pdf = $parser->parseContent($pdfContentStream);
-                            $pdfContent = $pdf->getText();
+                            $shipToDetails =  $this->extractShipToDetails($pdfContent);
+                            $allProductDetails = $this->extractAllProductDetails($pdfContent);
+                            //echo "<pre>"; print_r($shipToDetails);die;
                             $invoiceNo = $this->extractInvoiceNo($pdfContent);
                             $buyerSection = $this->extractBuyerSection($pdfContent);
                             $gstins = $this->extractGSTINsFromBuyerSection($buyerSection);
@@ -645,11 +655,19 @@ class OAuthController extends Controller
 
                             // Format the date if needed
                             $formattedDate = $lastModifiedDateTime->format('Y-m-d H:i:s');
-                                        
+   
                             $fileInfos[] = [
                                 'Invoice no' => $invoiceNo,
                                 'Email timestamp' => $formattedDate,
                                 'Bill to GST' => $gstins,
+                                'Ship to Code' =>  @$shipToDetails['ship_to_id'],
+                                'Ship to Customer Name' =>  @$shipToDetails['company_name'],
+                                'P1 Code' =>  @$allProductDetails[0]['product_code'],
+                                'P1 Description' => @$allProductDetails[0]['description'],
+                                'P1 Quantity' =>  @$allProductDetails[0]['quantity'],
+                                'P2 Code' =>  @$allProductDetails[1]['product_code'],
+                                'P12 Description' =>  @$allProductDetails[1]['description'],
+                                'P2 Quantity' =>  @$allProductDetails[1]['quantity'],
                                 'Attachment' => $file['@microsoft.graph.downloadUrl'],
                             ];
             
@@ -725,6 +743,55 @@ class OAuthController extends Controller
         }
         
 
+    }
+
+    protected function checkIfPDFContainsText($pdfText, $searchText) {
+
+        // Use preg_quote to safely escape any special characters in the search text
+        $pattern = '/\b' . preg_quote($searchText, '/') . '\b/i'; 
+    
+        // Perform a regular expression match on the extracted PDF text
+        return preg_match($pattern, $pdfText) === 1; // Return true if found
+    }
+
+    protected function extractShipToDetails($text) {
+        $pattern = '/Consignee:\s*Ship To\s*\((\d+)\)\s*([^\n]+)/'; 
+    
+        if (preg_match($pattern, $text, $matches)) {
+            return [
+                'ship_to_id' => $matches[1],
+                'company_name' => trim($matches[2]), 
+            ];
+        }
+    
+        return null; // Return null if not found
+    }
+    
+    protected function extractAllProductDetails($text) {
+        $pattern = '/(\d+)\s+([A-Za-z0-9]+)\s+(\d+)\s+([\d.]+)\s+(\w+)\s+([\d,.]+)\s+([\d,.]+)\s+(.+?)(Taxable Value)/s';
+
+        preg_match_all($pattern, $text, $matches, PREG_SET_ORDER);
+        
+        $productData = [];
+        $seenProductCodes = [];
+        foreach ($matches as $match) {
+            $productCode = $match[2];
+            if (!in_array($productCode, $seenProductCodes)) {
+            $productData[] = [
+                'product_code' => $match[2], // S.No.
+                // 'product_code' => $match[2], // Product Code
+                // 'hsn_code' => $match[3], // HSN Code
+                'quantity' => $match[4], // Quantity
+                // 'uom' => $match[5], // Unit of Measurement
+                // 'unit_rate' => $match[6], // Unit Rate
+                // 'value' => $match[7], // Value
+                'description' => trim($match[8]), // Description
+            ];
+            $seenProductCodes[] = $productCode;
+            }
+        }
+
+        return $productData;
     }
 
     protected function extractInvoiceNo($text)
