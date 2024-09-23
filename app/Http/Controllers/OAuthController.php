@@ -654,7 +654,7 @@ class OAuthController extends Controller
                             $lastModifiedDateTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
 
                             // Format the date if needed
-                            $formattedDate = $lastModifiedDateTime->format('Y-m-d H:i:s');
+                            $formattedDate = $lastModifiedDateTime->format('d-m-Y H:i:s');
    
                             $fileInfos[] = [
                                 'Invoice no' => $invoiceNo,
